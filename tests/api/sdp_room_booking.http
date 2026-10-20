@@ -1,0 +1,280 @@
+### ==============================================================================
+### SDP ROOM BOOKING - RESTful API Production Test Collection (Undiksha)
+### Stack: Laravel 12 · MariaDB 11 (Docker) · Sanctum Token · File Storage
+### ==============================================================================
+
+@baseUrl = http://localhost:8000/api/v1
+
+### ------------------------------------------------------------------------------
+### 1. AUTENTIKASI (Sanctum Token)
+### ------------------------------------------------------------------------------
+
+### 1.1 Login Admin (Seeder: admin@undiksha.ac.id / password)
+# @name loginAdmin
+POST {{baseUrl}}/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "admin@undiksha.ac.id",
+  "password": "password"
+}
+
+### Simpan token admin ke variabel
+@adminToken = {{loginAdmin.response.body.data.token}}
+
+### 1.2 Login Mahasiswa (Seeder: mhs1@undiksha.ac.id / password)
+# @name loginMhs
+POST {{baseUrl}}/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "mhs1@undiksha.ac.id",
+  "password": "password"
+}
+
+### Simpan token mahasiswa ke variabel
+@mhsToken = {{loginMhs.response.body.data.token}}
+
+### 1.3 Register Akun Baru (Mahasiswa / Dosen)
+POST {{baseUrl}}/register
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Mahasiswa Baru Undiksha",
+  "email": "mhsbaru@undiksha.ac.id",
+  "password": "password123",
+  "password_confirmation": "password123",
+  "role": "mahasiswa",
+  "nim_nip": "2215101099",
+  "phone": "081999888777",
+  "unit": "Ilmu Komputer"
+}
+
+### 1.4 Get Profile User Login
+GET {{baseUrl}}/profile
+Authorization: Bearer {{mhsToken}}
+Accept: application/json
+
+### 1.5 Logout User
+POST {{baseUrl}}/logout
+Authorization: Bearer {{mhsToken}}
+Accept: application/json
+
+
+### ------------------------------------------------------------------------------
+### 2. MASTER DATA - GEDUNG & FASILITAS
+### ------------------------------------------------------------------------------
+
+### 2.1 List Semua Gedung (Publik)
+GET {{baseUrl}}/buildings
+Accept: application/json
+
+### 2.2 Tambah Gedung Baru (Admin Only)
+POST {{baseUrl}}/buildings
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "code": "GTI",
+  "name": "Gedung Teknologi Informasi"
+}
+
+### 2.3 List Semua Fasilitas (Publik)
+GET {{baseUrl}}/facilities
+Accept: application/json
+
+### 2.4 Tambah Fasilitas Baru (Admin Only)
+POST {{baseUrl}}/facilities
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Interactive Podiums"
+}
+
+
+### ------------------------------------------------------------------------------
+### 3. MASTER DATA - RUANGAN & STORAGE (UPLOAD FOTO)
+### ------------------------------------------------------------------------------
+
+### 3.1 List Ruangan (Dengan Search, Filter & Pagination)
+GET {{baseUrl}}/rooms?page=1&per_page=5&type=kelas&status=active
+Accept: application/json
+
+### 3.2 Detail Ruangan Beserta Fasilitas & URL Foto
+GET {{baseUrl}}/rooms/1
+Accept: application/json
+
+### 3.3 Cek Ketersediaan Slot Ruangan pada Tanggal Tertentu
+GET {{baseUrl}}/rooms/1/availability?date=2026-10-21
+Accept: application/json
+
+### 3.4 Tambah Ruangan Baru + Upload Foto ke Storage (Admin Only - Multipart)
+POST {{baseUrl}}/rooms
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+Accept: application/json
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="building_id"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="code"
+
+GKB-301
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Ruang Kuliah Teori Multimedia 301
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="floor"
+
+3
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="capacity"
+
+50
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="type"
+
+kelas
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="status"
+
+active
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="facility_ids[]"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="facility_ids[]"
+
+2
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+
+### ------------------------------------------------------------------------------
+### 4. BOOKING FLOW & UJI CONCURRENCY (ANTI DOUBLE-BOOKING)
+### ------------------------------------------------------------------------------
+
+### 4.1 Ajukan Pemesanan Ruangan (Sukses - 201 Created)
+# @name createBooking
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{mhsToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "room_id": 1,
+  "title": "Bimbingan Skripsi Gelombang 1",
+  "purpose": "Konsultasi BAB 4 dan 5 tugas akhir bersama dosen pembimbing",
+  "attendees": 10,
+  "start_at": "2026-10-25 09:00:00",
+  "end_at": "2026-10-25 12:00:00"
+}
+
+@newBookingId = {{createBooking.response.body.data.id}}
+
+### 4.2 UJI DOUBLE-BOOKING: Pemesanan Bentrok pada Jam yang Sama (Ekspektasi: 409 Conflict)
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{mhsToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "room_id": 1,
+  "title": "Kegiatan Rapat Organisasi Mahasiswa (Bentrok)",
+  "purpose": "Jadwal ini bertabrakan dengan bimbingan skripsi di atas",
+  "attendees": 15,
+  "start_at": "2026-10-25 10:00:00",
+  "end_at": "2026-10-25 13:00:00"
+}
+
+### 4.3 List Pemesanan (Admin melihat semua, Mahasiswa hanya miliknya)
+GET {{baseUrl}}/bookings?status=pending
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 4.4 Setujui Pemesanan Ruangan (Admin Only)
+PATCH {{baseUrl}}/bookings/{{newBookingId}}/approve
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 4.5 Check-in Pemakaian Ruangan (Saat Waktu Penggunaan Dimulai)
+POST {{baseUrl}}/bookings/{{newBookingId}}/check-in
+Authorization: Bearer {{mhsToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "actual_attendees": 12
+}
+
+### 4.6 Check-out Pemakaian Ruangan & Selesai (Completed)
+POST {{baseUrl}}/bookings/{{newBookingId}}/check-out
+Authorization: Bearer {{mhsToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "actual_attendees": 12
+}
+
+### 4.7 Tolak Pemesanan Ruangan (Admin Only - Wajib Alasan)
+PATCH {{baseUrl}}/bookings/2/reject
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "rejection_reason": "Ruangan akan disterilisasi untuk persiapan akreditasi program studi."
+}
+
+
+### ------------------------------------------------------------------------------
+### 5. MONITORING & DASHBOARD METRICS (Admin Only)
+### ------------------------------------------------------------------------------
+
+### 5.1 Ringkasan Dashboard (Total Ruangan, Ongoing, Booking Hari Ini)
+GET {{baseUrl}}/dashboard/summary
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 5.2 Statistik Utilisasi Ruangan (Ruangan Terpopuler & Pemakaian Gedung)
+GET {{baseUrl}}/dashboard/utilization
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### ------------------------------------------------------------------------------
+### 6. PENGUJIAN RBAC & PENANGANAN ERROR STANDAR PRODUKSI
+### ------------------------------------------------------------------------------
+
+### 6.1 Uji 403 Forbidden: Mahasiswa Mencoba Menyetujui Booking
+PATCH {{baseUrl}}/bookings/{{newBookingId}}/approve
+Authorization: Bearer {{mhsToken}}
+Accept: application/json
+
+### 6.2 Uji 401 Unauthorized: Akses Endpoint Terproteksi Tanpa Token
+GET {{baseUrl}}/dashboard/summary
+Accept: application/json
+
+### 6.3 Uji 422 Unprocessable Entity: Validasi Peserta Melebihi Kapasitas Ruangan
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{mhsToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "room_id": 1,
+  "title": "Konser Musik di Ruang Kelas",
+  "attendees": 500,
+  "start_at": "2026-10-26 10:00:00",
+  "end_at": "2026-10-26 12:00:00"
+}

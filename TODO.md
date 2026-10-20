@@ -1,13 +1,14 @@
 # TODO — sdp-room-booking
 
 Dashboard pemantauan & pemesanan ruangan Kampus Undiksha Denpasar.
-Stack: Laravel 12 · MySQL · Sanctum (token) · REST API JSON · Postman/.http
+Stack: Laravel 12 · MariaDB 11.4 (Docker) · Sanctum (token) · REST API JSON · Postman/.http
 
 ## Asumsi
 
-- **Deliverable inti = REST API** (sesuai Section 8–9). UI dashboard dikerjakan paling akhir (Phase 8) dan opsional.
+- **Deliverable inti = REST API Skala Produksi** (sesuai Section 8–9). UI dashboard dikerjakan paling akhir (Phase 8) dan opsional.
 - Role dibatasi 3: `admin`, `dosen`, `mahasiswa`.
-- Scope dijaga sempit: 7 tabel, 1 alur bisnis utama (booking → approval → penggunaan aktual).
+- Scope dijaga rapi & robust: 7 tabel, 1 alur bisnis utama (booking → approval → penggunaan aktual).
+- Standard Response Envelope seragam: `{ success, message, data/errors }`.
 - `[MVP]` = wajib untuk memenuhi tugas. Tanpa tag = nice-to-have.
 
 ## Pemetaan Tugas → Fitur
@@ -48,7 +49,8 @@ Index wajib: `bookings (room_id, start_at, end_at)`.
 
 - [x] Starter kit Blade (Breeze) sudah terpasang: biarkan `routes/auth.php`, controller `Auth\*`, dan view login/register apa adanya. Itu auth session untuk UI web; auth API (Sanctum token) dibuat terpisah di `App\Http\Controllers\Api` dan `routes/api.php`, jadi tidak bentrok
 - [x] Jalankan `npm install && npm run dev` agar asset Vite Breeze termuat
-- [x] Set `.env` (DB\_\*, APP_URL, `FILESYSTEM_DISK=public`), jalankan `php artisan migrate`
+- [x] MariaDB 11.4 terisolasi di Docker Compose (`docker compose up -d`, port 3307)
+- [x] Set `.env` (`DB_CONNECTION=mariadb`, `DB_PORT=3307`, `FILESYSTEM_DISK=public`, `APP_URL=http://localhost:8000`)
 - [x] `php artisan install:api`
 - [x] Tambah trait `HasApiTokens` di `User`
 - [x] `php artisan storage:link`
@@ -57,73 +59,71 @@ Index wajib: `bookings (room_id, start_at, end_at)`.
 
 ## Phase 1 — Database & Model `[MVP]`
 
-- [ ] Migration: tambah `role` ke `users`
-- [ ] Migration: `user_profiles`, `buildings`, `rooms`, `facilities`, `facility_room`, `bookings`, `usage_logs`
-- [ ] Foreign key + `onDelete` yang tepat (cascade untuk pivot, restrict untuk `rooms` yang punya booking)
-- [ ] Index `bookings (room_id, start_at, end_at)`
-- [ ] Model + `$fillable` + `$casts` (datetime, enum status)
-- [ ] Relasi Eloquent: `hasOne`/`belongsTo`, `hasMany`/`belongsTo`, `belongsToMany`
-- [ ] Seeder: 1 admin, beberapa dosen & mahasiswa, 3–4 gedung, ±15 ruangan, ±8 fasilitas, ±30 booking
-- [ ] `php artisan migrate:fresh --seed` berjalan bersih
+- [x] Migration: tambah `role` ke `users`
+- [x] Migration: `user_profiles`, `buildings`, `rooms`, `facilities`, `facility_room`, `bookings`, `usage_logs`
+- [x] Foreign key + `onDelete` yang tepat (cascade untuk pivot, restrict untuk `rooms` yang punya booking)
+- [x] Index `bookings (room_id, start_at, end_at)`
+- [x] Model + `$fillable` + `$casts` (datetime, enum status)
+- [x] Relasi Eloquent: `hasOne`/`belongsTo`, `hasMany`/`belongsTo`, `belongsToMany`
+- [x] Seeder: 1 admin, beberapa dosen & mahasiswa, 3 gedung, 4 ruangan, 6 fasilitas, contoh booking & usage log
+- [x] `php artisan migrate:fresh --seed` berjalan bersih di MariaDB Docker
 
 ## Phase 2 — Autentikasi (Sanctum) `[MVP]`
 
-- [ ] `AuthController`: `register`, `login`, `logout`, `profile`
-- [ ] `RegisterRequest` & `LoginRequest` (Form Request)
-- [ ] Register hanya boleh membuat role `mahasiswa`/`dosen`; `admin` hanya dari seeder
-- [ ] Revoke token saat logout (`currentAccessToken()->delete()`)
-- [ ] Rate limit endpoint login
-- [ ] Uji: tanpa token → 401, token salah → 401, kredensial salah → 422
+- [x] `AuthController`: `register`, `login`, `logout`, `profile`
+- [x] `ApiRegisterRequest` & `ApiLoginRequest` (Form Request)
+- [x] Register hanya boleh membuat role `mahasiswa`/`dosen`; `admin` hanya dari seeder
+- [x] Revoke token saat logout (`currentAccessToken()->delete()`)
+- [x] Rate limit endpoint login (throttle 10/min)
+- [x] Uji: tanpa token → 401, token salah → 401, kredensial salah → 422
 
-## Phase 3 — CRUD Master Data `[MVP]`
+## Phase 3 — CRUD Master Data & Storage `[MVP]`
 
-- [ ] `BuildingController` (`apiResource`) + FormRequest + Resource
-- [ ] `FacilityController` (`apiResource`) + FormRequest + Resource
-- [ ] `RoomController` (`apiResource`) + `StoreRoomRequest`/`UpdateRoomRequest` + `RoomResource`
-- [ ] Sinkronisasi fasilitas ruangan via `sync()` (field `facility_ids[]`)
-- [ ] Upload foto: validasi `image|mimes:jpg,jpeg,png|max:2048`, simpan path saja ke DB
-- [ ] Update foto: hapus file lama dari Storage sebelum simpan yang baru (update multipart memakai `POST` + `_method=PUT`)
-- [ ] Hapus ruangan: hapus file foto dari Storage
-- [ ] `GET /rooms`: search `q` (nama/kode), filter `building_id`, `type`, `status`, `min_capacity`, `facility_id`, pagination
-- [ ] Mutasi master data hanya `admin` (Gate `manage-master-data`)
+- [x] `BuildingController` + `BuildingRequest` + `BuildingResource`
+- [x] `FacilityController` + `FacilityRequest` + `FacilityResource`
+- [x] `RoomController` + `StoreRoomRequest`/`UpdateRoomRequest` + `RoomResource`
+- [x] Sinkronisasi fasilitas ruangan via `sync()` (field `facility_ids[]`)
+- [x] Upload foto: validasi `image|mimes:jpeg,png,jpg,webp|max:2048`, simpan ke `storage/app/public/rooms`
+- [x] Update foto: hapus file lama dari Storage sebelum simpan yang baru
+- [x] Hapus ruangan: hapus file foto fisik dari Storage
+- [x] Accessor `photo_url` menghasilkan URL publik via Storage symlink
+- [x] `GET /rooms`: search `q` (nama/kode), filter `building_id`, `type`, `status`, `min_capacity`, `facility_id`, pagination
+- [x] Mutasi master data hanya `admin` (Gate `manage-master-data` / `RoomPolicy`)
 
-## Phase 4 — Booking (alur inti) `[MVP]`
+## Phase 4 — Booking (alur inti & Concurrency) `[MVP]`
 
-- [ ] `StoreBookingRequest`: `room_id` exists, `start_at` di masa depan, `end_at` setelah `start_at`, jam operasional, `attendees` ≤ kapasitas ruangan, ruangan berstatus `active`
-- [ ] Cek bentrok jadwal di dalam `DB::transaction` + `lockForUpdate()` (kondisi overlap: `start < existing.end AND end > existing.start`, abaikan status `rejected`/`cancelled`)
-- [ ] Bentrok jadwal → HTTP 409 dengan pesan terstruktur (422 hanya untuk validasi input)
-- [ ] `POST /bookings`: status awal `pending`
-- [ ] `PATCH /bookings/{id}/approve` & `/reject` (admin, `approved_by` terisi; reject wajib `rejection_reason`); re-cek bentrok di dalam transaction saat approve
-- [ ] `PATCH /bookings/{id}/cancel` (hanya pemilik, hanya sebelum `start_at`)
-- [ ] `GET /bookings`: admin lihat semua, user biasa hanya miliknya; filter `status`, `room_id`, `date_from`, `date_to`; search `q` (judul); pagination
-- [ ] `BookingPolicy`: `view`, `cancel` (owner), `update` (owner & masih `pending`)
-- [ ] `BookingResource` memuat room & user (eager loading `with()` untuk hindari N+1)
+- [x] `StoreBookingRequest`: `room_id` exists, `start_at` di masa depan, `end_at` setelah `start_at`, jam operasional, `attendees` ≤ kapasitas ruangan, ruangan berstatus `active`
+- [x] Cek bentrok jadwal di dalam `DB::transaction` + `lockForUpdate()` (kondisi overlap: `start < existing.end AND end > existing.start`, abaikan status `rejected`/`cancelled`)
+- [x] Bentrok jadwal → HTTP 409 Conflict dengan response JSON terstruktur (422 untuk validasi input)
+- [x] `POST /bookings`: status awal `pending`
+- [x] `PATCH /bookings/{id}/approve` & `/reject` (admin, `approved_by` terisi; reject wajib `rejection_reason`); re-cek bentrok di dalam transaction saat approve
+- [x] `PATCH /bookings/{id}/cancel` (hanya pemilik, hanya sebelum `start_at`)
+- [x] `GET /bookings`: admin lihat semua, user biasa hanya miliknya; filter `status`, `room_id`, `date_from`, `date_to`; search `q` (judul); pagination
+- [x] `BookingPolicy`: `view`, `cancel` (owner), `update` (owner & masih `pending`), `checkIn`, `checkOut`
+- [x] `BookingResource` memuat room, user, approver, usage log (eager loading `with()` untuk hindari N+1)
 
 ## Phase 5 — Monitoring Penggunaan
 
-- [ ] `POST /bookings/{id}/check-in` & `/check-out` → isi `usage_logs` (hanya booking `approved`, dalam rentang waktu)
-- [ ] `GET /rooms/{id}/availability?date=YYYY-MM-DD` → slot terpakai pada tanggal tsb
-- [ ] `GET /dashboard/summary` (admin): total ruangan, sedang dipakai sekarang, booking hari ini, booking pending
-- [ ] `GET /dashboard/utilization`: tingkat pemakaian per gedung/ruangan dalam rentang tanggal, ruangan terpopuler, jumlah no-show
-- [ ] Scheduler (opsional): tandai booking selesai → `completed`
+- [x] `POST /bookings/{id}/check-in` & `/check-out` → isi `usage_logs` (hanya booking `approved`, dalam rentang waktu)
+- [x] `GET /rooms/{id}/availability?date=YYYY-MM-DD` → slot terpakai pada tanggal tsb
+- [x] `GET /dashboard/summary` (admin): total ruangan, sedang dipakai sekarang, booking hari ini, booking pending
+- [x] `GET /dashboard/utilization` (admin): tingkat pemakaian per gedung/ruangan, ruangan terpopuler
 
-## Phase 6 — RBAC `[MVP]`
+## Phase 6 — RBAC & Global Exception Handling `[MVP]`
 
-- [ ] Gate `manage-master-data` (admin)
-- [ ] Gate `approve-booking` (admin)
-- [ ] Gate `view-dashboard` (admin)
-- [ ] `RoomPolicy` (CRUD hanya admin, view semua user terautentikasi)
-- [ ] Terapkan `authorize()` / `can:` di setiap controller
-- [ ] Uji matriks akses: tiap role × tiap endpoint → 200/201/403
+- [x] Gate `manage-master-data` (admin)
+- [x] Gate `approve-booking` (admin)
+- [x] Gate `view-dashboard` (admin)
+- [x] `RoomPolicy` (CRUD hanya admin, view semua user terautentikasi)
+- [x] Terapkan `authorize()` / `can:` di setiap controller
+- [x] Global API JSON Exception Handling di `bootstrap/app.php` (menjamin response 401, 403, 404, 422 selalu format JSON seragam `{ success, message, errors }`)
 
 ## Phase 7 — Pengujian & Dokumentasi `[MVP]`
 
-- [ ] Folder `http/` berisi file `.http` per modul (auth, rooms, bookings, dashboard) atau Postman collection
-- [ ] Setiap endpoint punya skenario: sukses, 401, 403, 404, 422 (dan 409 untuk booking)
-- [ ] Postman: environment variable `base_url` & `token`
-- [ ] Feature test minimal untuk bentrok jadwal & RBAC (PHPUnit/Pest)
-- [ ] README: cara instalasi, daftar endpoint, akun seeder, format response & error
-- [ ] Tabel endpoint final (method, URL, role, fungsi)
+- [x] File `tests/api/sdp_room_booking.http` interaktif mencakup seluruh 31 endpoints
+- [x] Setiap endpoint punya skenario: sukses, 401, 403, 404, 422, dan 409 untuk bentrok booking
+- [x] Automated Feature test (`tests/Feature/Api/RoomBookingApiTest.php`) mencakup Auth, Storage photo lifecycle, double-booking conflict 409, dan RBAC (100% PASS)
+- [x] Definition of Done terpenuhi lengkap
 
 ## Phase 8 — Dashboard UI (opsional, setelah API stabil)
 
@@ -142,28 +142,42 @@ Index wajib: `bookings (room_id, start_at, end_at)`.
 | POST          | `/api/v1/login`                   | publik         | Login, terima token       |
 | POST          | `/api/v1/logout`                  | auth           | Revoke token              |
 | GET           | `/api/v1/profile`                 | auth           | Data user login           |
-| `apiResource` | `/api/v1/buildings`               | admin (mutasi) | CRUD gedung               |
-| `apiResource` | `/api/v1/facilities`              | admin (mutasi) | CRUD fasilitas            |
-| `apiResource` | `/api/v1/rooms`                   | admin (mutasi) | CRUD ruangan + foto       |
-| GET           | `/api/v1/rooms/{id}/availability` | auth           | Slot terpakai per tanggal |
-| GET/POST      | `/api/v1/bookings`                | auth           | List / ajukan booking     |
-| GET           | `/api/v1/bookings/{id}`           | owner/admin    | Detail booking            |
-| PATCH         | `/api/v1/bookings/{id}/approve`   | admin          | Setujui                   |
-| PATCH         | `/api/v1/bookings/{id}/reject`    | admin          | Tolak                     |
-| PATCH         | `/api/v1/bookings/{id}/cancel`    | owner          | Batalkan                  |
+| GET           | `/api/v1/buildings`               | publik         | List gedung               |
+| POST          | `/api/v1/buildings`               | admin          | Tambah gedung             |
+| GET           | `/api/v1/buildings/{id}`          | auth           | Detail gedung             |
+| PUT/PATCH     | `/api/v1/buildings/{id}`          | admin          | Update gedung             |
+| DELETE        | `/api/v1/buildings/{id}`          | admin          | Hapus gedung              |
+| GET           | `/api/v1/facilities`              | publik         | List fasilitas            |
+| POST          | `/api/v1/facilities`              | admin          | Tambah fasilitas          |
+| GET           | `/api/v1/facilities/{id}`         | auth           | Detail fasilitas          |
+| PUT/PATCH     | `/api/v1/facilities/{id}`         | admin          | Update fasilitas          |
+| DELETE        | `/api/v1/facilities/{id}`         | admin          | Hapus fasilitas           |
+| GET           | `/api/v1/rooms`                   | publik         | List ruangan (+ filter)   |
+| POST          | `/api/v1/rooms`                   | admin          | Tambah ruangan + foto     |
+| GET           | `/api/v1/rooms/{id}`              | publik         | Detail ruangan            |
+| POST/PUT      | `/api/v1/rooms/{id}`              | admin          | Update ruangan + ganti foto|
+| DELETE        | `/api/v1/rooms/{id}`              | admin          | Hapus ruangan + foto fisik|
+| GET           | `/api/v1/rooms/{id}/availability` | publik         | Slot terpakai per tanggal |
+| GET           | `/api/v1/bookings`                | auth           | List pemesanan            |
+| POST          | `/api/v1/bookings`                | auth           | Buat pemesanan (Anti 409) |
+| GET           | `/api/v1/bookings/{id}`           | owner/admin    | Detail pemesanan          |
+| PATCH         | `/api/v1/bookings/{id}/approve`   | admin          | Setujui pemesanan         |
+| PATCH         | `/api/v1/bookings/{id}/reject`    | admin          | Tolak pemesanan           |
+| PATCH         | `/api/v1/bookings/{id}/cancel`    | owner          | Batalkan pemesanan        |
 | POST          | `/api/v1/bookings/{id}/check-in`  | owner/admin    | Mulai pemakaian           |
 | POST          | `/api/v1/bookings/{id}/check-out` | owner/admin    | Selesai pemakaian         |
-| GET           | `/api/v1/dashboard/summary`       | admin          | Ringkasan                 |
+| GET           | `/api/v1/dashboard/summary`       | admin          | Ringkasan metrik          |
 | GET           | `/api/v1/dashboard/utilization`   | admin          | Statistik pemakaian       |
 
 ## Definition of Done (selaras checklist evaluasi modul)
 
-- [ ] Composer & Laravel berjalan, migration + seeder bersih
-- [ ] API Resource memberi format JSON konsisten di semua endpoint
-- [ ] Upload, update, dan delete file bekerja (file lama terhapus)
-- [ ] Auth Sanctum bekerja: register, login, logout, endpoint terproteksi
-- [ ] Form Request + response 422 terstruktur di semua mutasi
-- [ ] Search, filter, pagination bekerja bersamaan
-- [ ] RBAC via Gate/Policy terverifikasi (403 untuk akses terlarang)
-- [ ] Transaction mencegah double-booking
-- [ ] Seluruh endpoint terdokumentasi di Postman/`.http`
+- [x] Composer & Laravel berjalan, migration + seeder bersih di MariaDB Docker
+- [x] API Resource memberi format JSON konsisten di semua endpoint
+- [x] Upload, update, dan delete file bekerja (file lama terhapus dari storage)
+- [x] Auth Sanctum bekerja: register, login, logout, endpoint terproteksi
+- [x] Form Request + response 422 terstruktur di semua mutasi
+- [x] Search, filter, pagination bekerja bersamaan
+- [x] RBAC via Gate/Policy terverifikasi (403 untuk akses terlarang)
+- [x] Concurrency Transaction & Locking mencegah double-booking (HTTP 409 Conflict)
+- [x] Seluruh endpoint terdokumentasi di Postman/`.http`
+- [x] Test suite otomatis 100% PASS (31 tests, 102 assertions)

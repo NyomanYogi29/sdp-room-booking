@@ -1,0 +1,18 @@
+services:
+  mariadb:
+    image: mariadb:11.4
+    container_name: sdp-mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: sdp_room_booking
+      MYSQL_USER: sdp_user
+      MYSQL_PASSWORD: sdp_password
+    ports:
+      - "${FORWARD_DB_PORT:-3307}:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+volumes:
+  mariadb_data:
+    driver: local
