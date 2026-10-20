@@ -265,4 +265,37 @@ class RoomBookingApiTest extends TestCase
         $checkOutResponse->assertStatus(200)
             ->assertJsonPath('data.status', 'completed');
     }
+
+    public function test_rate_limiting_throttle_returns_429_json(): void
+    {
+        // Route register memiliki throttle 5 percobaan per menit
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/v1/register', [
+                'name' => 'Spammer',
+                'email' => "spam{$i}@undiksha.ac.id",
+                'password' => 'secret123',
+                'password_confirmation' => 'secret123',
+                'role' => 'mahasiswa',
+                'nim_nip' => "999{$i}",
+            ]);
+        }
+
+        // Percobaan ke-6 harus terkena limit 429 Too Many Requests
+        $response = $this->postJson('/api/v1/register', [
+            'name' => 'Spammer 6',
+            'email' => 'spam6@undiksha.ac.id',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'role' => 'mahasiswa',
+            'nim_nip' => '9996',
+        ]);
+
+        $response->assertStatus(429)
+            ->assertJsonPath('success', false)
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'retry_after_seconds',
+            ]);
+    }
 }

@@ -4,6 +4,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -48,6 +49,18 @@ return Application::configure(basePath: dirname(__DIR__))
                     'success' => false,
                     'message' => 'Data atau endpoint yang Anda cari tidak ditemukan.',
                 ], 404);
+            }
+        });
+
+        $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                $retryAfter = $e->getHeaders()['Retry-After'] ?? 60;
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Terlalu banyak permintaan (Too Many Requests). Silakan coba lagi dalam {$retryAfter} detik.",
+                    'retry_after_seconds' => (int) $retryAfter,
+                ], 429);
             }
         });
 
