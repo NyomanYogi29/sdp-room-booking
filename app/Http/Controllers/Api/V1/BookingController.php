@@ -85,7 +85,7 @@ class BookingController extends Controller
                 ->whereIn('status', ['pending', 'approved'])
                 ->where(function ($query) use ($startAt, $endAt) {
                     $query->where('start_at', '<', $endAt)
-                          ->where('end_at', '>', $startAt);
+                        ->where('end_at', '>', $startAt);
                 })
                 ->lockForUpdate()
                 ->first();
@@ -105,6 +105,8 @@ class BookingController extends Controller
                 'attendees' => $validated['attendees'],
                 'start_at' => $startAt,
                 'end_at' => $endAt,
+                'slot_start' => $validated['slot_start'] ?? null,
+                'slot_end' => $validated['slot_end'] ?? null,
                 'status' => 'pending',
             ]);
 
@@ -168,7 +170,7 @@ class BookingController extends Controller
                 ->where('status', 'approved')
                 ->where(function ($query) use ($booking) {
                     $query->where('start_at', '<', $booking->end_at)
-                          ->where('end_at', '>', $booking->start_at);
+                        ->where('end_at', '>', $booking->start_at);
                 })
                 ->lockForUpdate()
                 ->first();

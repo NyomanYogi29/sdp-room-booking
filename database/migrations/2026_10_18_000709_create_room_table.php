@@ -16,9 +16,10 @@ return new class extends Migration
             $table->foreignId('building_id')->constrained()->cascadeOnDelete();
             $table->string('code')->unique();
             $table->string('name');
+            $table->text('description')->nullable();
             $table->integer('floor');
             $table->integer('capacity');
-            $table->enum('type', ['kelas', 'lab', 'rapat']);
+            $table->enum('type', ['kelas', 'lab', 'rapat'])->default('kelas');
             $table->enum('status', ['active', 'maintenance'])->default('active');
             $table->string('photo')->nullable();
             $table->timestamps();

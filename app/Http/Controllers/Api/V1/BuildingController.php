@@ -20,7 +20,7 @@ class BuildingController extends Controller
             ->when($request->filled('q'), function ($query) use ($request) {
                 $q = $request->query('q');
                 $query->where('name', 'like', "%{$q}%")
-                      ->orWhere('code', 'like', "%{$q}%");
+                    ->orWhere('code', 'like', "%{$q}%");
             })
             ->get();
 

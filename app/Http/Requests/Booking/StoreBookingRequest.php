@@ -22,6 +22,8 @@ class StoreBookingRequest extends FormRequest
             'attendees' => ['required', 'integer', 'min:1'],
             'start_at' => ['required', 'date', 'after:now'],
             'end_at' => ['required', 'date', 'after:start_at'],
+            'slot_start' => ['nullable', 'string', 'in:A,B,C,D,E,F,G,H,I,J,K,L,M,N,O'],
+            'slot_end' => ['nullable', 'string', 'in:A,B,C,D,E,F,G,H,I,J,K,L,M,N,O'],
         ];
     }
 

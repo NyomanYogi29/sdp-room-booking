@@ -19,6 +19,8 @@ class Booking extends Model
         'attendees',
         'start_at',
         'end_at',
+        'slot_start',
+        'slot_end',
         'status',
         'approved_by',
         'rejection_reason',

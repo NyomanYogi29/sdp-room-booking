@@ -20,6 +20,7 @@ class UpdateRoomRequest extends FormRequest
             'building_id' => ['sometimes', 'required', 'exists:buildings,id'],
             'code' => ['sometimes', 'required', 'string', 'max:50', Rule::unique('rooms', 'code')->ignore($roomId)],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1000'],
             'floor' => ['sometimes', 'required', 'integer', 'min:1'],
             'capacity' => ['sometimes', 'required', 'integer', 'min:1'],
             'type' => ['sometimes', 'required', Rule::in(['kelas', 'lab', 'rapat'])],

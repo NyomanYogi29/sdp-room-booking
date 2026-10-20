@@ -20,6 +20,8 @@ return new class extends Migration
             $table->integer('attendees');
             $table->dateTime('start_at');
             $table->dateTime('end_at');
+            $table->string('slot_start', 5)->nullable();
+            $table->string('slot_end', 5)->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled', 'completed'])->default('pending');
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->text('rejection_reason')->nullable();

@@ -28,7 +28,7 @@ class RoomController extends Controller
                 $q = $request->query('q');
                 $query->where(function ($subQuery) use ($q) {
                     $subQuery->where('name', 'like', "%{$q}%")
-                             ->orWhere('code', 'like', "%{$q}%");
+                        ->orWhere('code', 'like', "%{$q}%");
                 });
             })
             ->when($request->filled('building_id'), function ($query) use ($request) {

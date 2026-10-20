@@ -4,7 +4,12 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return response()->json([
+        'app' => 'Undiksha Denpasar Room Booking API',
+        'version' => 'v1',
+        'status' => 'active',
+        'api_documentation' => url('/api/v1/rooms'),
+    ]);
 });
 
 Route::get('/dashboard', function () {

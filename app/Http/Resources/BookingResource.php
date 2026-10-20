@@ -21,6 +21,8 @@ class BookingResource extends JsonResource
             'attendees' => $this->attendees,
             'start_at' => $this->start_at?->toISOString(),
             'end_at' => $this->end_at?->toISOString(),
+            'slot_start' => $this->slot_start,
+            'slot_end' => $this->slot_end,
             'status' => $this->status,
             'rejection_reason' => $this->rejection_reason,
             'user' => new UserResource($this->whenLoaded('user')),

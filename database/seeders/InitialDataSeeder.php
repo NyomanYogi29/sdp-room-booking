@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\AcademicSlot;
 use App\Models\Booking;
 use App\Models\Building;
 use App\Models\Facility;
@@ -20,7 +21,30 @@ class InitialDataSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Users & Profiles
+        // 1. Kamus Waktu Akademik SKS (Slots A s.d. O) SDP Undiksha
+        $slotsData = [
+            ['code' => 'A', 'start_time' => '07:30', 'end_time' => '08:20', 'label' => '07:30 - 08:20', 'order' => 1, 'duration_minutes' => 50, 'description' => 'SKS Pagi 1'],
+            ['code' => 'B', 'start_time' => '08:30', 'end_time' => '09:20', 'label' => '08:30 - 09:20', 'order' => 2, 'duration_minutes' => 50, 'description' => 'SKS Pagi 2'],
+            ['code' => 'C', 'start_time' => '09:30', 'end_time' => '10:20', 'label' => '09:30 - 10:20', 'order' => 3, 'duration_minutes' => 50, 'description' => 'SKS Pagi 3'],
+            ['code' => 'D', 'start_time' => '10:30', 'end_time' => '11:20', 'label' => '10:30 - 11:20', 'order' => 4, 'duration_minutes' => 50, 'description' => 'SKS Siang 1'],
+            ['code' => 'E', 'start_time' => '11:30', 'end_time' => '12:20', 'label' => '11:30 - 12:20', 'order' => 5, 'duration_minutes' => 50, 'description' => 'SKS Siang 2'],
+            ['code' => 'F', 'start_time' => '12:30', 'end_time' => '13:20', 'label' => '12:30 - 13:20', 'order' => 6, 'duration_minutes' => 50, 'description' => 'SKS Siang 3'],
+            ['code' => 'G', 'start_time' => '13:30', 'end_time' => '14:20', 'label' => '13:30 - 14:20', 'order' => 7, 'duration_minutes' => 50, 'description' => 'SKS Sore 1'],
+            ['code' => 'H', 'start_time' => '14:30', 'end_time' => '15:30', 'label' => '14:30 - 15:30', 'order' => 8, 'duration_minutes' => 60, 'description' => 'SKS Jeda / Ishoma'],
+            ['code' => 'I', 'start_time' => '15:30', 'end_time' => '16:20', 'label' => '15:30 - 16:20', 'order' => 9, 'duration_minutes' => 50, 'description' => 'SKS Sore 2'],
+            ['code' => 'J', 'start_time' => '16:20', 'end_time' => '17:10', 'label' => '16:20 - 17:10', 'order' => 10, 'duration_minutes' => 50, 'description' => 'SKS Sore 3'],
+            ['code' => 'K', 'start_time' => '17:30', 'end_time' => '18:20', 'label' => '17:30 - 18:20', 'order' => 11, 'duration_minutes' => 50, 'description' => 'SKS Malam 1'],
+            ['code' => 'L', 'start_time' => '18:20', 'end_time' => '19:10', 'label' => '18:20 - 19:10', 'order' => 12, 'duration_minutes' => 50, 'description' => 'SKS Malam 2'],
+            ['code' => 'M', 'start_time' => '19:30', 'end_time' => '20:20', 'label' => '19:30 - 20:20', 'order' => 13, 'duration_minutes' => 50, 'description' => 'SKS Malam 3'],
+            ['code' => 'N', 'start_time' => '20:20', 'end_time' => '21:10', 'label' => '20:20 - 21:10', 'order' => 14, 'duration_minutes' => 50, 'description' => 'SKS Malam 4'],
+            ['code' => 'O', 'start_time' => '21:10', 'end_time' => '22:00', 'label' => '21:10 - 22:00', 'order' => 15, 'duration_minutes' => 50, 'description' => 'SKS Malam 5 / Batas Operasional'],
+        ];
+
+        foreach ($slotsData as $slot) {
+            AcademicSlot::create($slot);
+        }
+
+        // 2. Akun Pengguna & Profil (Admin, Dosen, Mahasiswa)
         $usersData = [
             [
                 'name' => 'Administrator Undiksha',
@@ -100,145 +124,183 @@ class InitialDataSeeder extends Seeder
             $users[$user->email] = $user;
         }
 
-        // 2. Facilities
+        // 3. Fasilitas Kampus
         $facilities = [
             'Proyektor 4K' => Facility::create(['name' => 'Proyektor 4K']),
             'AC Central' => Facility::create(['name' => 'AC Central']),
             'Sound System & Mic Wireless' => Facility::create(['name' => 'Sound System & Mic Wireless']),
             'Smart TV 65 Inch' => Facility::create(['name' => 'Smart TV 65 Inch']),
             'Whiteboard & Marker' => Facility::create(['name' => 'Whiteboard & Marker']),
-            'High-Speed WiFi' => Facility::create(['name' => 'High-Speed WiFi']),
+            'High-Speed WiFi 6' => Facility::create(['name' => 'High-Speed WiFi 6']),
         ];
 
-        // 3. Buildings
-        $gkb = Building::create([
-            'code' => 'GKB',
-            'name' => 'Gedung Kuliah Bersama',
-        ]);
+        // 4. Gedung sesuai spesifikasi
+        $buildings = [
+            'Gedung R.A. Kartini' => Building::create([
+                'code' => 'RAK',
+                'name' => 'Gedung R.A. Kartini',
+            ]),
+            'Gedung Ki Hadjar Dewantara' => Building::create([
+                'code' => 'KHD',
+                'name' => 'Gedung Ki Hadjar Dewantara',
+            ]),
+            'Gedung Utama' => Building::create([
+                'code' => 'GUT',
+                'name' => 'Gedung Utama',
+            ]),
+        ];
 
-        $glk = Building::create([
-            'code' => 'GLK',
-            'name' => 'Gedung Lab Komputer & Multimedia',
-        ]);
+        // 5. Data Ruangan Resmi (ROOM_LIST)
+        $rawRooms = [
+            // Lantai 1 Gedung R.A. Kartini
+            ['code' => 'RAK_1.1', 'name' => 'Ruang 1.1', 'building' => 'Gedung R.A. Kartini', 'floor' => 1, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_1.2', 'name' => 'Ruang 1.2', 'building' => 'Gedung R.A. Kartini', 'floor' => 1, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_1.3', 'name' => 'Ruang 1.3', 'building' => 'Gedung R.A. Kartini', 'floor' => 1, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_1.4', 'name' => 'Ruang 1.4', 'building' => 'Gedung R.A. Kartini', 'floor' => 1, 'capacity' => 17, 'type' => 'kelas'],
 
-        $rek = Building::create([
-            'code' => 'REK',
-            'name' => 'Gedung Rektorat & Aula Kampus',
-        ]);
+            // Lantai 2 Gedung R.A. Kartini
+            ['code' => 'RAK_2.1', 'name' => 'Ruang 2.1', 'building' => 'Gedung R.A. Kartini', 'floor' => 2, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_2.2', 'name' => 'Ruang 2.2', 'building' => 'Gedung R.A. Kartini', 'floor' => 2, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_2.3', 'name' => 'Ruang 2.3', 'building' => 'Gedung R.A. Kartini', 'floor' => 2, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_2.4', 'name' => 'Ruang 2.4', 'building' => 'Gedung R.A. Kartini', 'floor' => 2, 'capacity' => 17, 'type' => 'kelas'],
 
-        // 4. Rooms
-        $room1 = Room::create([
-            'building_id' => $gkb->id,
-            'code' => 'GKB-101',
-            'name' => 'Ruang Teori 101',
-            'floor' => 1,
-            'capacity' => 40,
-            'type' => 'kelas',
-            'status' => 'active',
-            'photo' => null,
-        ]);
-        $room1->facilities()->sync([
-            $facilities['AC Central']->id,
-            $facilities['Proyektor 4K']->id,
-            $facilities['Whiteboard & Marker']->id,
-            $facilities['High-Speed WiFi']->id,
-        ]);
+            // Lantai 3 Gedung R.A. Kartini
+            ['code' => 'RAK_3.1', 'name' => 'Ruang 3.1', 'building' => 'Gedung R.A. Kartini', 'floor' => 3, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_3.2', 'name' => 'Ruang 3.2', 'building' => 'Gedung R.A. Kartini', 'floor' => 3, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_3.3', 'name' => 'Ruang 3.3', 'building' => 'Gedung R.A. Kartini', 'floor' => 3, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_3.4', 'name' => 'Ruang 3.4', 'building' => 'Gedung R.A. Kartini', 'floor' => 3, 'capacity' => 17, 'type' => 'kelas'],
 
-        $room2 = Room::create([
-            'building_id' => $glk->id,
-            'code' => 'GLK-LAB-AI',
-            'name' => 'Laboratorium AI & Data Science',
-            'floor' => 2,
-            'capacity' => 30,
-            'type' => 'lab',
-            'status' => 'active',
-            'photo' => null,
-        ]);
-        $room2->facilities()->sync([
+            // Lantai 4 Gedung R.A. Kartini
+            ['code' => 'RAK_4.1', 'name' => 'Ruang 4.1', 'building' => 'Gedung R.A. Kartini', 'floor' => 4, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_4.2', 'name' => 'Ruang 4.2', 'building' => 'Gedung R.A. Kartini', 'floor' => 4, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_4.3', 'name' => 'Ruang 4.3', 'building' => 'Gedung R.A. Kartini', 'floor' => 4, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'RAK_4.4', 'name' => 'Ruang 4.4', 'building' => 'Gedung R.A. Kartini', 'floor' => 4, 'capacity' => 17, 'type' => 'kelas'],
+
+            // Lantai 2 Gedung Ki Hadjar Dewantara
+            ['code' => 'KHD_2.2', 'name' => 'Ruang 2.2', 'building' => 'Gedung Ki Hadjar Dewantara', 'floor' => 2, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'KHD_2.3', 'name' => 'Ruang 2.3', 'building' => 'Gedung Ki Hadjar Dewantara', 'floor' => 2, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'KHD_2.4', 'name' => 'Ruang 2.4', 'building' => 'Gedung Ki Hadjar Dewantara', 'floor' => 2, 'capacity' => 17, 'type' => 'kelas'],
+
+            // Lantai 3 Gedung Ki Hadjar Dewantara
+            ['code' => 'KHD_3.2', 'name' => 'Ruang 3.2', 'building' => 'Gedung Ki Hadjar Dewantara', 'floor' => 3, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'KHD_3.3', 'name' => 'Ruang 3.3', 'building' => 'Gedung Ki Hadjar Dewantara', 'floor' => 3, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'KHD_3.4', 'name' => 'Ruang 3.4', 'building' => 'Gedung Ki Hadjar Dewantara', 'floor' => 3, 'capacity' => 17, 'type' => 'kelas'],
+
+            // Lantai 4 Gedung Ki Hadjar Dewantara
+            ['code' => 'KHD_4.2', 'name' => 'Ruang 4.2', 'building' => 'Gedung Ki Hadjar Dewantara', 'floor' => 4, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'KHD_4.3', 'name' => 'Ruang 4.3', 'building' => 'Gedung Ki Hadjar Dewantara', 'floor' => 4, 'capacity' => 40, 'type' => 'kelas'],
+            ['code' => 'KHD_4.4', 'name' => 'Ruang 4.4', 'building' => 'Gedung Ki Hadjar Dewantara', 'floor' => 4, 'capacity' => 17, 'type' => 'kelas'],
+
+            // Fasilitas Utama / Serbaguna
+            [
+                'code' => 'AUDITORIUM',
+                'name' => 'Auditorium SDP',
+                'building' => 'Gedung Utama',
+                'floor' => 1,
+                'capacity' => 200,
+                'type' => 'rapat',
+                'description' => 'Aula serbaguna kegiatan dan seminar kampus',
+            ],
+            [
+                'code' => 'HYBRID',
+                'name' => 'Ruang Hybrid 1.2',
+                'building' => 'Gedung Ki Hadjar Dewantara',
+                'floor' => 1,
+                'capacity' => 25,
+                'type' => 'lab',
+                'description' => 'Perkuliahan hybrid atau ruang meeting direksi',
+            ],
+        ];
+
+        $rooms = [];
+        foreach ($rawRooms as $r) {
+            $building = $buildings[$r['building']];
+
+            $room = Room::create([
+                'building_id' => $building->id,
+                'code' => $r['code'],
+                'name' => $r['name'],
+                'description' => $r['description'] ?? null,
+                'floor' => $r['floor'],
+                'capacity' => $r['capacity'],
+                'type' => $r['type'],
+                'status' => 'active',
+                'photo' => null,
+            ]);
+
+            // Assign fasilitas standar
+            $room->facilities()->sync([
+                $facilities['AC Central']->id,
+                $facilities['Whiteboard & Marker']->id,
+                $facilities['High-Speed WiFi 6']->id,
+                $facilities['Proyektor 4K']->id,
+            ]);
+
+            $rooms[$r['code']] = $room;
+        }
+
+        // Fasilitas tambahan untuk Auditorium & Hybrid
+        $rooms['AUDITORIUM']->facilities()->sync(array_values(array_map(fn ($f) => $f->id, $facilities)));
+        $rooms['HYBRID']->facilities()->sync([
             $facilities['AC Central']->id,
             $facilities['Smart TV 65 Inch']->id,
-            $facilities['High-Speed WiFi']->id,
-        ]);
-
-        $room3 = Room::create([
-            'building_id' => $rek->id,
-            'code' => 'REK-AUD-01',
-            'name' => 'Auditorium Utama Ganesha',
-            'floor' => 3,
-            'capacity' => 150,
-            'type' => 'rapat',
-            'status' => 'active',
-            'photo' => null,
-        ]);
-        $room3->facilities()->sync([
-            $facilities['AC Central']->id,
-            $facilities['Proyektor 4K']->id,
             $facilities['Sound System & Mic Wireless']->id,
-            $facilities['High-Speed WiFi']->id,
+            $facilities['High-Speed WiFi 6']->id,
         ]);
 
-        $room4 = Room::create([
-            'building_id' => $gkb->id,
-            'code' => 'GKB-204',
-            'name' => 'Ruang Seminar 204',
-            'floor' => 2,
-            'capacity' => 60,
-            'type' => 'kelas',
-            'status' => 'maintenance',
-            'photo' => null,
-        ]);
-        $room4->facilities()->sync([
-            $facilities['Whiteboard & Marker']->id,
-        ]);
+        // 6. Contoh Pemesanan Berdasarkan Slot SKS
+        $tomorrow = Carbon::now()->addDay();
 
-        // 5. Initial Bookings
-        $tomorrow = Carbon::now()->addDay()->setHour(9)->setMinute(0)->setSecond(0);
-
-        // Booking 1: Approved booking tomorrow (9am - 12pm)
+        // Booking 1: Slot A-C (07:30 - 10:20) di Ruang RAK_1.1
         $booking1 = Booking::create([
             'user_id' => $users['dosen1@undiksha.ac.id']->id,
-            'room_id' => $room1->id,
-            'title' => 'Kuliah Rekayasa Web Semester 5',
-            'purpose' => 'Perkuliahan tatap muka praktikum integrasi REST API',
-            'attendees' => 35,
-            'start_at' => $tomorrow->copy(),
-            'end_at' => $tomorrow->copy()->addHours(3),
+            'room_id' => $rooms['RAK_1.1']->id,
+            'title' => 'Kuliah Rekayasa Web (3 SKS)',
+            'purpose' => 'Praktikum integrasi RESTful API Laravel & MariaDB',
+            'attendees' => 38,
+            'start_at' => $tomorrow->copy()->setTime(7, 30, 0),
+            'end_at' => $tomorrow->copy()->setTime(10, 20, 0),
+            'slot_start' => 'A',
+            'slot_end' => 'C',
             'status' => 'approved',
             'approved_by' => $users['admin@undiksha.ac.id']->id,
         ]);
 
-        // Booking 2: Pending booking
+        // Booking 2: Slot D-E (10:30 - 12:20) di Ruang HYBRID
         Booking::create([
-            'user_id' => $users['mhs1@undiksha.ac.id']->id,
-            'room_id' => $room2->id,
-            'title' => 'Workshop Machine Learning HMJ TI',
-            'purpose' => 'Kegiatan workshop mahasiswa pengenalan PyTorch dan Deep Learning',
-            'attendees' => 25,
-            'start_at' => Carbon::now()->addDays(2)->setHour(13)->setMinute(0)->setSecond(0),
-            'end_at' => Carbon::now()->addDays(2)->setHour(16)->setMinute(0)->setSecond(0),
+            'user_id' => $users['dosen2@undiksha.ac.id']->id,
+            'room_id' => $rooms['HYBRID']->id,
+            'title' => 'Kuliah Hybrid Manajemen Proyek TI',
+            'purpose' => 'Sesi tatap muka dan video conference dengan narasumber industri',
+            'attendees' => 22,
+            'start_at' => $tomorrow->copy()->setTime(10, 30, 0),
+            'end_at' => $tomorrow->copy()->setTime(12, 20, 0),
+            'slot_start' => 'D',
+            'slot_end' => 'E',
             'status' => 'pending',
         ]);
 
-        // Booking 3: Completed booking with usage log
-        $pastStart = Carbon::now()->subDays(2)->setHour(10)->setMinute(0)->setSecond(0);
-        $pastEnd = $pastStart->copy()->addHours(2);
+        // Booking 3: Slot G-H (13:30 - 15:30) di AUDITORIUM (Selesai dengan UsageLog)
+        $past = Carbon::now()->subDay();
         $booking3 = Booking::create([
-            'user_id' => $users['dosen2@undiksha.ac.id']->id,
-            'room_id' => $room3->id,
-            'title' => 'Rapat Pleno Jurusan TI',
-            'purpose' => 'Evaluasi kurikulum berbasis OBE',
-            'attendees' => 45,
-            'start_at' => $pastStart,
-            'end_at' => $pastEnd,
+            'user_id' => $users['mhs1@undiksha.ac.id']->id,
+            'room_id' => $rooms['AUDITORIUM']->id,
+            'title' => 'Seminar Nasional Himpunan Mahasiswa Jurusan TI',
+            'purpose' => 'Seminar kecerdasan buatan dan karir bidang teknologi',
+            'attendees' => 180,
+            'start_at' => $past->copy()->setTime(13, 30, 0),
+            'end_at' => $past->copy()->setTime(15, 30, 0),
+            'slot_start' => 'G',
+            'slot_end' => 'H',
             'status' => 'completed',
             'approved_by' => $users['admin@undiksha.ac.id']->id,
         ]);
 
         UsageLog::create([
             'booking_id' => $booking3->id,
-            'checked_in_at' => $pastStart->copy()->addMinutes(5),
-            'checked_out_at' => $pastEnd->copy()->subMinutes(10),
-            'actual_attendees' => 42,
+            'checked_in_at' => $past->copy()->setTime(13, 35, 0),
+            'checked_out_at' => $past->copy()->setTime(15, 25, 0),
+            'actual_attendees' => 175,
         ]);
     }
 }

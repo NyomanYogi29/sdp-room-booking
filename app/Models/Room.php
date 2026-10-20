@@ -18,6 +18,7 @@ class Room extends Model
         'building_id',
         'code',
         'name',
+        'description',
         'floor',
         'capacity',
         'type',
@@ -27,6 +28,7 @@ class Room extends Model
 
     protected $appends = [
         'photo_url',
+        'is_active',
     ];
 
     protected function casts(): array
@@ -35,6 +37,11 @@ class Room extends Model
             'floor' => 'integer',
             'capacity' => 'integer',
         ];
+    }
+
+    protected function isActive(): Attribute
+    {
+        return Attribute::get(fn () => $this->status === 'active');
     }
 
     protected function photoUrl(): Attribute

@@ -4,7 +4,6 @@ namespace Tests\Feature\Api;
 
 use App\Models\Booking;
 use App\Models\Building;
-use App\Models\Facility;
 use App\Models\Room;
 use App\Models\User;
 use Carbon\Carbon;
@@ -18,8 +17,11 @@ class RoomBookingApiTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $mahasiswa;
+
     private Building $building;
+
     private Room $room;
 
     protected function setUp(): void

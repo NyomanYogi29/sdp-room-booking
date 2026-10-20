@@ -18,6 +18,7 @@ class StoreRoomRequest extends FormRequest
             'building_id' => ['required', 'exists:buildings,id'],
             'code' => ['required', 'string', 'max:50', 'unique:rooms,code'],
             'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1000'],
             'floor' => ['required', 'integer', 'min:1'],
             'capacity' => ['required', 'integer', 'min:1'],
             'type' => ['required', Rule::in(['kelas', 'lab', 'rapat'])],

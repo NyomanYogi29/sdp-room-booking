@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AcademicSlotController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BookingController;
 use App\Http\Controllers\Api\V1\BuildingController;
@@ -13,7 +14,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
-    // 2. Public Read-Only Endpoints (Browsing Ruangan & Fasilitas)
+    // 2. Public Read-Only Endpoints (Browsing Ruangan, Fasilitas & Academic Slots)
+    Route::get('/slots', [AcademicSlotController::class, 'index']);
     Route::get('/rooms', [RoomController::class, 'index']);
     Route::get('/rooms/{room}', [RoomController::class, 'show']);
     Route::get('/rooms/{room}/availability', [RoomController::class, 'availability']);
